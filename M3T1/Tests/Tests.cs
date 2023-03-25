@@ -7,75 +7,79 @@ public class Tests
     private int _nextId;
 
     private MongoClient _client;
-    private IMongoCollection<CartEntity> _mongoCollection;
-    private CartService _service;
+    private IMongoCollection<ItemEntity> _mongoCollection;
+    private ItemService _service;
 
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        _client = new MongoClient("mongodb://localhost:27017");
+        _client = new("mongodb://localhost:27017");
         var database = _client.GetDatabase("test");
-        _mongoCollection = database.GetCollection<CartEntity>("carts");
-        _service = new(new CartRepository(database));
+        _mongoCollection = database.GetCollection<ItemEntity>("items");
+        _service = new(new ItemRepository(database));
     }
 
     [OneTimeTearDown]
     public void OneTimeTearDown() => _client.DropDatabase("test");
 
     [Test]
-    public async Task GetAllWorks()
+    public async Task GetByCartIdWorks()
     {
-        var setUpCarts = new CartEntity[]
+        var setUpCartId = 1;
+        var otherCartId = 2;
+        var setUpItems = new ItemEntity[]
         {
-            new() { Id = GetNextId(), Name = "Cart 1", Price = 100, Quantity = 200 },
-            new() { Id = GetNextId(), Name = "Cart 2", Price = 300, Quantity = 400 },
-            new() { Id = GetNextId(), Name = "Cart 3", Price = 500, Quantity = 600 },
+            new() { Id = GetNextId(), Name = "Item 1", CartId = setUpCartId, Price = 10, Quantity = 11 },
+            new() { Id = GetNextId(), Name = "Item 2", CartId = otherCartId, Price = 10, Quantity = 11 },
+            new() { Id = GetNextId(), Name = "Item 3", CartId = setUpCartId, Price = 10, Quantity = 11 },
         };
-        await _mongoCollection.InsertManyAsync(setUpCarts);
+        await _mongoCollection.InsertManyAsync(setUpItems);
 
-        var retrievedCarts = await _service.GetAll();
+        var retrievedItems = await _service.GetByCartId(setUpCartId);
 
-        Assert.True(setUpCarts.All(setUpCart => retrievedCarts.Any(retrievedCart => retrievedCart.Id == setUpCart.Id)));
+        var setUpItemsWithSetUpCartId = setUpItems.Where(item => item.CartId == setUpCartId);
+        Assert.True(setUpItemsWithSetUpCartId.All(setUpItem => retrievedItems.Any(item => item.Id == setUpItem.Id)));
+        Assert.True(retrievedItems.All(item => item.CartId == setUpCartId));
     }
 
     [Test]
-    public async Task AddItemWorks()
+    public async Task CreateWorks()
     {
-        var setUpCart = new CartEntity { Id = GetNextId(), Name = "Cart", Price = 100, Quantity = 200 };
-        await _mongoCollection.InsertOneAsync(setUpCart);
+        var setUpItem = new ItemCreateDto
+        {
+            Id = GetNextId(),
+            Name = "My New Item",
+            CartId = 1,
+            Price = 10,
+            Quantity = 11,
+        };
 
-        await _service.AddItemFromCartById(setUpCart.Id);
+        await _service.Create(setUpItem);
 
-        var updatedCart = await _mongoCollection.Find(Builders<CartEntity>.Filter.Eq(cart => cart.Id, setUpCart.Id)).FirstAsync();
-        Assert.AreEqual(setUpCart.Quantity + 1, updatedCart.Quantity);
+        Assert.True(await _mongoCollection.Find(Builders<ItemEntity>.Filter.Eq(item => item.Id, setUpItem.Id)).AnyAsync());
     }
 
     [Test]
-    public async Task RemoveItemWorks()
+    public void CreateValidationWorks()
     {
-        var setUpCart = new CartEntity { Id = GetNextId(), Name = "Cart", Price = 100, Quantity = 200 };
-        await _mongoCollection.InsertOneAsync(setUpCart);
-
-        await _service.RemoveItemFromCartById(setUpCart.Id);
-
-        var updatedCart = await _mongoCollection.Find(Builders<CartEntity>.Filter.Eq(cart => cart.Id, setUpCart.Id)).FirstAsync();
-        Assert.AreEqual(setUpCart.Quantity - 1, updatedCart.Quantity);
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "" }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "Name", Price = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "Name", Price = 10, Quantity = 0 }));
     }
 
     [Test]
-    public void AddItemRejectsInvalidId() => Assert.ThrowsAsync<BadRequestException>(() => _service.AddItemFromCartById(GetNextId()));
-
-    [Test]
-    public void RemoveItemRejectsInvalidId() => Assert.ThrowsAsync<BadRequestException>(() => _service.RemoveItemFromCartById(GetNextId()));
-
-    [Test]
-    public async Task RemoveItemRefusesToGoBelowOne()
+    public async Task DeleteWorks()
     {
-        var setUpCart = new CartEntity { Id = GetNextId(), Name = "Cart", Price = 100, Quantity = 1 };
-        await _mongoCollection.InsertOneAsync(setUpCart);
+        var setUpItem = new ItemEntity { Id = GetNextId(), Name = "To Be Deleted", CartId = 1, Price = 10, Quantity = 11 };
+        await _mongoCollection.InsertOneAsync(setUpItem);
 
-        Assert.ThrowsAsync<BadRequestException>(() => _service.RemoveItemFromCartById(setUpCart.Id));
+        await _service.Delete(setUpItem.Id);
+
+        Assert.False(await _mongoCollection.Find(Builders<ItemEntity>.Filter.Eq(item => item.Id, setUpItem.Id)).AnyAsync());
     }
+
+    [Test]
+    public void DeleteRejectsInvalidId() => Assert.ThrowsAsync<BadRequestException>(() => _service.Delete(GetNextId()));
 
     private int GetNextId() { lock (_nextIdLock) { return _nextId++; } }
 }
