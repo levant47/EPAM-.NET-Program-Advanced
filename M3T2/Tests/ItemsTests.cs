@@ -1,6 +1,5 @@
-﻿public class ItemsTests
+﻿public class ItemsTests : TestsBase
 {
-    private MySqlConnection _connection;
     private ItemService _service;
 
     private int _setUpCategoryId;
@@ -9,51 +8,31 @@
     public async Task OneTimeSetUp()
     {
         await using var connection = new MySqlConnection("server=localhost;uid=root;database=test");
-        _setUpCategoryId = await connection.QueryFirstAsync<int>(@"
-            INSERT INTO Categories (Name)
-            VALUES ('Set-up category for item tests')
-            RETURNING Id
-        ");
+        _setUpCategoryId = (await DataHelper.SetUpCategories(1, connection)).First().Id;
     }
 
     [SetUp]
-    public void SetUp()
-    {
-        _connection = new("server=localhost;uid=root;database=test");
-        _service = new(new ItemRepository(_connection), new CategoryRepository(_connection));
-    }
+    public void SetUp() => _service = new(new ItemRepository(_connection), new CategoryRepository(_connection));
 
     [Test]
     public async Task GetAllWorks()
     {
-        var setUpNames = new[] { "Item 1", "Item 2", "Item 3" };
-        await _connection.ExecuteAsync(@"
-            INSERT INTO Items (Name, CategoryId, Price, Amount)
-            VALUES
-                (@Name1, @CategoryId, @Price, @Amount),
-                (@Name2, @CategoryId, @Price, @Amount),
-                (@Name3, @CategoryId, @Price, @Amount)
-        ", new { Name1 = setUpNames[0], Name2 = setUpNames[1], Name3 = setUpNames[2], CategoryId = _setUpCategoryId, Price = 10, Amount = 11 });
+        var setUpItems = await SetUpItems(3);
 
         var items = (await _service.GetAll()).ToList();
 
-        Assert.True(setUpNames.All(name => items.Any(category => category.Name == name)));
+        Assert.True(setUpItems.All(setUpItem => items.Any(item => item.Name == setUpItem.Name)));
     }
 
     [Test]
     public async Task GetByIdWorks()
     {
-        var setUpName = "My item that I need to get by ID";
-        var setUpId = await _connection.QueryFirstAsync<int>(@"
-            INSERT INTO Items (Name, CategoryId, Price, Amount)
-            VALUES (@Name, @CategoryId, @Price, @Amount)
-            RETURNING Id
-        ", new { Name = setUpName, CategoryId = _setUpCategoryId, Price = 10, Amount = 11 });
+        var setUpItem = await SetUpItem();
 
-        var retrievedItem = await _service.GetById(setUpId);
+        var retrievedItem = await _service.GetById(setUpItem.Id);
 
         Assert.NotNull(retrievedItem);
-        Assert.AreEqual(setUpName, retrievedItem!.Name);
+        Assert.AreEqual(setUpItem.Name, retrievedItem!.Name);
     }
 
     [Test]
@@ -92,20 +71,16 @@
     [Test]
     public async Task UpdateWorks()
     {
-        var setUpId = await _connection.QueryFirstAsync<int>(@$"
-            INSERT INTO Items (Name, CategoryId, Price, Amount)
-            VALUES ('Test name', {_setUpCategoryId}, 10, 11)
-            RETURNING Id
-        ");
+        var setUpItem = await SetUpItem();
         var setUpUpdate = new ItemUpdateDto { Name = "Test name (updated)", CategoryId = _setUpCategoryId, Price = 10, Amount = 11 };
 
-        await _service.Update(setUpId, setUpUpdate);
+        await _service.Update(setUpItem.Id, setUpUpdate);
 
         var retrievedName = await _connection.QueryFirstOrDefaultAsync<string>(@"
             SELECT Name
             FROM Items
             WHERE Id = @Id
-        ", new { Id = setUpId });
+        ", new { setUpItem.Id });
         Assert.AreEqual(setUpUpdate.Name, retrievedName);
     }
 
@@ -115,29 +90,21 @@
     [Test]
     public async Task UpdateValidationWorks()
     {
-        var setUpId = await _connection.QueryFirstAsync<int>(@"
-            INSERT INTO Categories (Name)
-            VALUES ('Test name')
-            RETURNING Id
-        ");
+        var setUpItem = await SetUpItem();
 
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpId, new() { Name = "" }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpId, new() { Name = new('A', ItemEntity.NameMaxLength + 1) }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpId, new() { Name = "Name", CategoryId = -1 }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpId, new() { Name = "Name", CategoryId = _setUpCategoryId, Price = 0 }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpId, new() { Name = "Name", CategoryId = _setUpCategoryId, Price = 10, Amount = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpItem.Id, new() { Name = "" }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpItem.Id, new() { Name = new('A', ItemEntity.NameMaxLength + 1) }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpItem.Id, new() { Name = "Name", CategoryId = -1 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpItem.Id, new() { Name = "Name", CategoryId = _setUpCategoryId, Price = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Update(setUpItem.Id, new() { Name = "Name", CategoryId = _setUpCategoryId, Price = 10, Amount = 0 }));
     }
 
     [Test]
     public async Task DeleteWorks()
     {
-        var setUpId = await _connection.QueryFirstAsync<int>(@$"
-            INSERT INTO Items (Name, CategoryId, Price, Amount)
-            VALUES ('Test name', {_setUpCategoryId}, 10, 11)
-            RETURNING Id
-        ");
+        var setUpItem = await SetUpItem();
 
-        await _service.Delete(setUpId);
+        await _service.Delete(setUpItem.Id);
 
         var exists = await _connection.QueryFirstAsync<bool>(@"
             SELECT EXISTS (
@@ -145,10 +112,14 @@
                 FROM Items
                 WHERE Id = @Id
             )
-        ", new { Id = setUpId });
+        ", new { setUpItem.Id });
         Assert.False(exists);
     }
 
     [Test]
     public void DeleteHandlesInvalidId() => Assert.ThrowsAsync<BadRequestException>(() => _service.Delete(-1));
+
+    private async Task<ItemEntity> SetUpItem() => (await SetUpItems(1)).First();
+
+    private Task<List<ItemEntity>> SetUpItems(int count) => DataHelper.SetUpItems(_setUpCategoryId, count, _connection);
 }
