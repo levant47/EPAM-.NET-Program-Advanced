@@ -7,18 +7,30 @@
     public Task<List<ItemEntity>> GetByCartId(int cartId) => _repository.GetByFilter(new() { CartId = cartId });
 
     // add item to cart
-    public Task Create(ItemCreateDto newItem)
+    public async Task<ItemEntity> Create(int cartId, ItemCreateDto newItem)
     {
         if (newItem.Name == "") { throw new BadRequestException("Name cannot be empty"); }
         if (newItem.Price <= 0) { throw new BadRequestException("Price must be greater than zero"); }
         if (newItem.Quantity <= 0) { throw new BadRequestException("Quantity must be greater than zero"); }
-        return _repository.Create(newItem);
+        var newEntity = new ItemEntity
+        {
+            Id = newItem.Id,
+            Name = newItem.Name,
+            ImageUrl = newItem.ImageUrl,
+            ImageAltText = newItem.ImageAltText,
+            Price = newItem.Price,
+            Quantity = newItem.Quantity,
+            CartId = cartId,
+        };
+        await _repository.Create(newEntity);
+        return newEntity;
     }
 
     // remove item from cart
-    public async Task Delete(int id)
+    public async Task<bool> Delete(int id)
     {
-        if (!await _repository.Exists(new() { Id = id })) { throw new BadRequestException($"Item with ID {id} does not exist"); }
+        if (!await _repository.Exists(new() { Id = id })) { return false; }
         await _repository.Delete(new() { Id = id });
+        return true;
     }
 }

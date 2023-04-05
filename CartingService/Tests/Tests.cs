@@ -49,12 +49,11 @@ public class Tests
         {
             Id = GetNextId(),
             Name = "My New Item",
-            CartId = 1,
             Price = 10,
             Quantity = 11,
         };
 
-        await _service.Create(setUpItem);
+        await _service.Create(1, setUpItem);
 
         Assert.True(await _mongoCollection.Find(Builders<ItemEntity>.Filter.Eq(item => item.Id, setUpItem.Id)).AnyAsync());
     }
@@ -62,9 +61,9 @@ public class Tests
     [Test]
     public void CreateValidationWorks()
     {
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "" }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "Name", Price = 0 }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(new() { Name = "Name", Price = 10, Quantity = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "" }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "Name", Price = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "Name", Price = 10, Quantity = 0 }));
     }
 
     [Test]
@@ -79,7 +78,12 @@ public class Tests
     }
 
     [Test]
-    public void DeleteRejectsInvalidId() => Assert.ThrowsAsync<BadRequestException>(() => _service.Delete(GetNextId()));
+    public async Task DeleteRejectsInvalidId()
+    {
+        var found = await _service.Delete(GetNextId());
+
+        Assert.False(found);
+    }
 
     private int GetNextId() { lock (_nextIdLock) { return _nextId++; } }
 }
