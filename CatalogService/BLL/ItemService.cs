@@ -13,17 +13,25 @@
 
     public Task<IEnumerable<ItemEntity>> GetAll() => _repository.GetAll();
 
-    public async Task<int> Create(ItemCreateDto newItem)
+    public async Task<ItemPageDto> GetByFilter(ItemFilterDto filter) => new()
+    {
+        Items = (await _repository.GetByFilter(filter)).ToArray(),
+        Total = await _repository.GetCountByFilter(filter),
+    };
+
+    public async Task<ItemEntity> Create(ItemCreateDto newItem)
     {
         await ValidateItem(newItem);
-        return await _repository.Create(newItem);
+        var id = await _repository.Create(newItem);
+        return (await _repository.GetById(id))!;
     }
 
-    public async Task Update(int id, ItemUpdateDto update)
+    public async Task<ItemEntity> Update(int id, ItemUpdateDto update)
     {
         if (!await _repository.Exists(id)) { throw new BadRequestException($"Invalid item ID: {id}"); }
         await ValidateItem(update);
         await _repository.Update(id, update);
+        return (await _repository.GetById(id))!;
     }
 
     public async Task Delete(int id)
