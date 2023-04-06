@@ -43,13 +43,13 @@
     {
         var setUpCategory = new CategoryCreateDto { Name = "My new category" };
 
-        var newCategoryId = await _service.Create(setUpCategory);
+        var newCategory = await _service.Create(setUpCategory);
 
         var retrievedName = await _connection.QueryFirstOrDefaultAsync<string>(@"
             SELECT Name
             FROM Categories
             WHERE Id = @Id
-        ", new { Id = newCategoryId });
+        ", new { newCategory.Id });
         Assert.AreEqual(setUpCategory.Name, retrievedName);
     }
 
