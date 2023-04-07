@@ -2,5 +2,5 @@
 {
     public int? Id { get; set; }
 
-    public int? CartId { get; set; }
+    public string? CartId { get; set; }
 }

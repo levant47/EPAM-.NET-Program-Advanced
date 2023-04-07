@@ -1,4 +1,4 @@
 ﻿public interface ICartService
 {
-    Task<CartDto?> GetById(int id);
+    Task<CartDto> GetById(string id);
 }

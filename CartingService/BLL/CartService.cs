@@ -4,10 +4,11 @@
 
     public CartService(IItemRepository itemRepository) => _itemRepository = itemRepository;
 
-    public async Task<CartDto?> GetById(int id)
+    public async Task<CartDto> GetById(string id)
     {
         var items = await _itemRepository.GetByFilter(new() { CartId = id });
-        if (items.Count == 0) { return null; } // we don't have a cart entity, so we just say that if no items reference the ID, then it doesn't exist
+        // we don't have a cart entity, so we just say that if no items reference the ID, then it doesn't exist
+        if (items.Count == 0) { throw new NotFoundException($"Cart with ID {id} was not found"); }
         return new() { Id = id, Items = items };
     }
 }

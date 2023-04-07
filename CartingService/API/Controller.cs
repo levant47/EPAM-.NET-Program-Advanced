@@ -14,10 +14,9 @@ public class Controller : ControllerBase
 
     [ApiVersion(1, 2)]
     [HttpGet("carts/{cartId}")]
-    public async Task<ActionResult> GetCart(int cartId)
+    public async Task<ActionResult> GetCart(string cartId)
     {
         var cart = await _cartService.GetById(cartId);
-        if (cart == null) { return NotFound(); }
         var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
         return Ok(new
         {
@@ -31,7 +30,7 @@ public class Controller : ControllerBase
             {
                 Items = cart.Items.Select(item => new
                 {
-                    _links = new { self = new { href = Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id)) } },
+                    _links = ItemLinks(item),
                     item.Id,
                     item.Name,
                     item.ImageUrl,
@@ -44,17 +43,12 @@ public class Controller : ControllerBase
     }
 
     [HttpPost("carts/{cartId}/items")]
-    public async Task<ActionResult<ItemEntity>> AddItemToCart(int cartId, ItemCreateDto newItem)
+    public async Task<ActionResult<ItemEntity>> AddItemToCart(string cartId, ItemCreateDto newItem)
     {
         var item = await _itemService.Create(cartId, newItem);
-        var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
         return Ok(new
         {
-            _links = new
-            {
-                self = new { href = Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id)) },
-                cart = new { href = Url.Action(nameof(GetCart), routeValues.SetItem("cartId", cartId)) },
-            },
+            _links = ItemLinks(item),
             item.Id,
             item.Name,
             item.ImageUrl,
@@ -68,17 +62,15 @@ public class Controller : ControllerBase
     [HttpDelete("carts/{cartId}/items/{id}")]
     public async Task<ActionResult> RemoveItemFromCart(int id)
     {
-        var found = await _itemService.Delete(id);
-        if (!found) { return NotFound(); }
+        await _itemService.Delete(id);
         return Ok();
     }
 
     [ApiVersion(2)]
     [HttpGet("carts/{cartId}/items")]
-    public async Task<ActionResult<List<ItemEntity>>> GetItems(int cartId)
+    public async Task<ActionResult<List<ItemEntity>>> GetItems(string cartId)
     {
         var items = await _itemService.GetByCartId(cartId);
-        var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
         return Ok(new
         {
             _links = new { self = new { href = Url.Action() } },
@@ -86,7 +78,7 @@ public class Controller : ControllerBase
             {
                 Items = items.Select(item => new
                 {
-                    _links = new { self = new { href = Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id)) } },
+                    _links = ItemLinks(item),
                     item.Id,
                     item.Name,
                     item.ImageUrl,
@@ -96,5 +88,15 @@ public class Controller : ControllerBase
                 }),
             },
         });
+    }
+
+    private object ItemLinks(ItemEntity item)
+    {
+        var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
+        return new
+        {
+            self = new { href = Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id)) },
+            cart = new { href = Url.Action(nameof(GetCart), routeValues.SetItem("cartId", item.CartId)) },
+        };
     }
 }
