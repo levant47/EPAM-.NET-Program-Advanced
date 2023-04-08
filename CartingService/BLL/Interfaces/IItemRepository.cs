@@ -2,7 +2,7 @@
 {
     Task<List<ItemEntity>> GetByFilter(ItemFilterDto filter);
 
-    Task Create(ItemCreateDto newItem);
+    Task Create(ItemEntity newItem);
 
     Task<bool> Exists(ItemFilterDto filter);
 

@@ -1,4 +1,4 @@
-﻿public class ItemEntity
+﻿public class ItemBase
 {
     public int Id { get; set; }
 
@@ -11,6 +11,4 @@
     public decimal Price { get; set; }
 
     public int Quantity { get; set; }
-
-    public int CartId { get; set; }
 }

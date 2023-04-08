@@ -8,7 +8,7 @@ public class ItemRepository : IItemRepository
 
     public Task<List<ItemEntity>> GetByFilter(ItemFilterDto filter) => _collection.Find(MakeMongoFilter(filter)).ToListAsync();
 
-    public Task Create(ItemCreateDto newItem) => _collection.InsertOneAsync(newItem);
+    public Task Create(ItemEntity newItem) => _collection.InsertOneAsync(newItem);
 
     public Task<bool> Exists(ItemFilterDto filter) => _collection.Find(MakeMongoFilter(filter)).AnyAsync();
 
