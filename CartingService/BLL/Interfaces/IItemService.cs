@@ -1,8 +1,8 @@
 ﻿public interface IItemService
 {
-    Task<List<ItemEntity>> GetByCartId(int cartId);
+    Task<List<ItemEntity>> GetByCartId(string cartId);
 
-    Task<ItemEntity> Create(int cartId, ItemCreateDto newItem);
+    Task<ItemEntity> Create(string cartId, ItemCreateDto newItem);
 
-    Task<bool> Delete(int id);
+    Task Delete(int id);
 }

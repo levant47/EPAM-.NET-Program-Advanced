@@ -25,8 +25,8 @@ public class Tests
     [Test]
     public async Task GetByCartIdWorks()
     {
-        var setUpCartId = 1;
-        var otherCartId = 2;
+        var setUpCartId = "1";
+        var otherCartId = "2";
         var setUpItems = new ItemEntity[]
         {
             new() { Id = GetNextId(), Name = "Item 1", CartId = setUpCartId, Price = 10, Quantity = 11 },
@@ -53,7 +53,7 @@ public class Tests
             Quantity = 11,
         };
 
-        await _service.Create(1, setUpItem);
+        await _service.Create("1", setUpItem);
 
         Assert.True(await _mongoCollection.Find(Builders<ItemEntity>.Filter.Eq(item => item.Id, setUpItem.Id)).AnyAsync());
     }
@@ -61,15 +61,15 @@ public class Tests
     [Test]
     public void CreateValidationWorks()
     {
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "" }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "Name", Price = 0 }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create(1, new() { Name = "Name", Price = 10, Quantity = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "" }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "Name", Price = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "Name", Price = 10, Quantity = 0 }));
     }
 
     [Test]
     public async Task DeleteWorks()
     {
-        var setUpItem = new ItemEntity { Id = GetNextId(), Name = "To Be Deleted", CartId = 1, Price = 10, Quantity = 11 };
+        var setUpItem = new ItemEntity { Id = GetNextId(), Name = "To Be Deleted", CartId = "1", Price = 10, Quantity = 11 };
         await _mongoCollection.InsertOneAsync(setUpItem);
 
         await _service.Delete(setUpItem.Id);
@@ -78,12 +78,7 @@ public class Tests
     }
 
     [Test]
-    public async Task DeleteRejectsInvalidId()
-    {
-        var found = await _service.Delete(GetNextId());
-
-        Assert.False(found);
-    }
+    public void DeleteRejectsInvalidId() => Assert.ThrowsAsync<NotFoundException>(() => _service.Delete(GetNextId()));
 
     private int GetNextId() { lock (_nextIdLock) { return _nextId++; } }
 }

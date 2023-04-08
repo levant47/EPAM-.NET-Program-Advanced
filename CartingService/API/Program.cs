@@ -42,9 +42,11 @@ app.Use(next => async context =>
     try { await next(context); }
     catch (BadRequestException exception)
     {
-        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-        context.Response.ContentType = MediaTypeNames.Text.Plain;
-        await context.Response.WriteAsync(exception.Message);
+        await Results.BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message }).ExecuteAsync(context);
+    }
+    catch (NotFoundException exception)
+    {
+        await Results.NotFound(new ProblemDetails { Title = "Not Found", Detail = exception.Message }).ExecuteAsync(context);
     }
 });
 
