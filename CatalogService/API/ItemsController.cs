@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-[ApiController]
+﻿[ApiController]
 [Route("api/items")]
 [Produces("application/hal+json")]
 public class ItemsController : ControllerBase
@@ -14,72 +12,38 @@ public class ItemsController : ControllerBase
     {
         var result = await _service.GetByFilter(new() { CategoryId = categoryId, Page = page, PageSize = pageSize });
         var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
-        var links = new Dictionary<string, object>
+        var links = new List<Link>
         {
-            { "self", new { href = Url.Action() } },
-            { "first", new { href = Url.Action(nameof(Get), routeValues.SetItem("page", 1)) } },
-            { "last", new { href = Url.Action(nameof(Get), routeValues.SetItem("page", (int)Math.Ceiling((double)Math.Max(1, result.Total) / pageSize))) } },
+            new("self", Url.Action()),
+            new("first", Url.Action(nameof(Get), routeValues.SetItem("page", 1))),
+            new("last", Url.Action(nameof(Get), routeValues.SetItem("page", (int)Math.Ceiling((double)Math.Max(1, result.Total) / pageSize)))),
         };
         if ((page - 1) * pageSize + result.Items.Length < result.Total)
         {
-            links["next"] = new { href = Url.Action(nameof(Get), routeValues.SetItem(nameof(page), page + 1)) };
+            links.Add(new("next", Url.Action(nameof(Get), routeValues.SetItem(nameof(page), page + 1))));
         }
         if (page > 1)
         {
-            links["prev"] = new { href = Url.Action(nameof(Get), routeValues.SetItem(nameof(page), page - 1)) };
+            links.Add(new("prev", Url.Action(nameof(Get), routeValues.SetItem(nameof(page), page - 1))));
         }
-        return Ok(new
-        {
-            _links = links,
-            _embedded = new
-            {
-                Items = result.Items.Select(item => new
-                {
-                    _links = Links(item),
-                    item.Id,
-                    item.Name,
-                    item.Description,
-                    item.ImageUrl,
-                    item.CategoryId,
-                    item.Price,
-                    item.Amount,
-                }),
-            },
-        });
+        return Ok(Hateoas(
+            links: links,
+            embedded: new { items = result.Items.Select(item => Hateoas(item, Links(item))), }
+        ));
     }
 
     [HttpPost]
     public async Task<ActionResult<ItemEntity>> Create(ItemCreateDto newItem)
     {
         var result = await _service.Create(newItem);
-        return Ok(new
-        {
-            _links = Links(result),
-            result.Id,
-            result.Name,
-            result.Description,
-            result.ImageUrl,
-            result.CategoryId,
-            result.Price,
-            result.Amount,
-        });
+        return Ok(Hateoas(result, Links(result)));
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<ItemEntity>> Update(int id, ItemUpdateDto update)
     {
         var result = await _service.Update(id, update);
-        return Ok(new
-        {
-            _links = Links(result),
-            result.Id,
-            result.Name,
-            result.Description,
-            result.ImageUrl,
-            result.CategoryId,
-            result.Price,
-            result.Amount,
-        });
+        return Ok(Hateoas(result, Links(result)));
     }
 
     [HttpDelete("{id}")]
@@ -89,9 +53,9 @@ public class ItemsController : ControllerBase
         return NoContent();
     }
 
-    private object Links(ItemEntity item) => new
+    private List<Link> Links(ItemEntity item) => new()
     {
-        self = new { href = Url.Action(nameof(Update), new { id = item.Id }) },
-        category = new { href = Url.Action(nameof(CategoriesController.Update), "Categories", new { id = item.CategoryId }) },
+        new("self", Url.Action(nameof(Update), new { id = item.Id })),
+        new("category", Url.Action(nameof(CategoriesController.Update), "Categories", new { id = item.CategoryId })),
     };
 }

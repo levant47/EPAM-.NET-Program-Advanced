@@ -21,7 +21,7 @@ public class Controller : ControllerBase
         return Ok(Hateoas(
             cart,
             links: new() { new("self", Url.Action()), new("items", Url.Action(nameof(AddItemToCart), routeValues)) },
-            embedded: new { Items = cart.Items.Select(item => Hateoas(item, ItemLinks(item))) }
+            embedded: new { items = cart.Items.Select(item => Hateoas(item, ItemLinks(item))) }
         ));
     }
 
@@ -46,7 +46,7 @@ public class Controller : ControllerBase
         var items = await _itemService.GetByCartId(cartId);
         return Ok(Hateoas(
             links: new() { new("self", Url.Action()) },
-            embedded: new { Items = items.Select(item => Hateoas(item, ItemLinks(item))) }
+            embedded: new { items = items.Select(item => Hateoas(item, ItemLinks(item))) }
         ));
     }
 
