@@ -18,45 +18,18 @@ public class Controller : ControllerBase
     {
         var cart = await _cartService.GetById(cartId);
         var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
-        return Ok(new
-        {
-            _links = new
-            {
-                self = new { href = Url.Action() },
-                items = new { href = Url.Action(nameof(AddItemToCart), routeValues) },
-            },
-            cart.Id,
-            _embedded = new
-            {
-                Items = cart.Items.Select(item => new
-                {
-                    _links = ItemLinks(item),
-                    item.Id,
-                    item.Name,
-                    item.ImageUrl,
-                    item.ImageAltText,
-                    item.Price,
-                    item.Quantity,
-                }),
-            },
-        });
+        return Ok(Hateoas(
+            cart,
+            links: new() { new("self", Url.Action()), new("items", Url.Action(nameof(AddItemToCart), routeValues)) },
+            embedded: new { Items = cart.Items.Select(item => Hateoas(item, ItemLinks(item))) }
+        ));
     }
 
     [HttpPost("carts/{cartId}/items")]
     public async Task<ActionResult<ItemEntity>> AddItemToCart(string cartId, ItemCreateDto newItem)
     {
         var item = await _itemService.Create(cartId, newItem);
-        return Ok(new
-        {
-            _links = ItemLinks(item),
-            item.Id,
-            item.Name,
-            item.ImageUrl,
-            item.ImageAltText,
-            item.Price,
-            item.Quantity,
-            item.CartId,
-        });
+        return Ok(Hateoas(item, ItemLinks(item)));
     }
 
     [HttpDelete("carts/{cartId}/items/{id}")]
@@ -71,32 +44,19 @@ public class Controller : ControllerBase
     public async Task<ActionResult<List<ItemEntity>>> GetItems(string cartId)
     {
         var items = await _itemService.GetByCartId(cartId);
-        return Ok(new
-        {
-            _links = new { self = new { href = Url.Action() } },
-            _embedded = new
-            {
-                Items = items.Select(item => new
-                {
-                    _links = ItemLinks(item),
-                    item.Id,
-                    item.Name,
-                    item.ImageUrl,
-                    item.ImageAltText,
-                    item.Price,
-                    item.Quantity,
-                }),
-            },
-        });
+        return Ok(Hateoas(
+            links: new() { new("self", Url.Action()) },
+            embedded: new { Items = items.Select(item => Hateoas(item, ItemLinks(item))) }
+        ));
     }
 
-    private object ItemLinks(ItemEntity item)
+    private List<Link> ItemLinks(ItemEntity item)
     {
         var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();
-        return new
+        return new()
         {
-            self = new { href = Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id)) },
-            cart = new { href = Url.Action(nameof(GetCart), routeValues.SetItem("cartId", item.CartId)) },
+            new("self", Url.Action(nameof(RemoveItemFromCart), routeValues.SetItem("id", item.Id))),
+            new("cart", Url.Action(nameof(GetCart), routeValues.SetItem("cartId", item.CartId))),
         };
     }
 }

@@ -1,6 +1,5 @@
-﻿global using System.Collections.Immutable;
-global using System.Net;
-global using System.Net.Mime;
+﻿global using System.Collections;
+global using System.Collections.Immutable;
 global using System.Reflection;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -9,3 +8,4 @@ global using Microsoft.AspNetCore.Mvc.Filters;
 global using Microsoft.OpenApi.Models;
 global using MongoDB.Driver;
 global using Swashbuckle.AspNetCore.SwaggerGen;
+global using static HateoasExtensions;
