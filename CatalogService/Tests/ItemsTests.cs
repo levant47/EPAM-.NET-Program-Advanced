@@ -48,13 +48,13 @@
     {
         var setUpItem = new ItemCreateDto { Name = "My new category", CategoryId = _setUpCategoryId, Price = 10, Amount = 11 };
 
-        var newItemId = await _service.Create(setUpItem);
+        var newItem = await _service.Create(setUpItem);
 
         var retrievedName = await _connection.QueryFirstOrDefaultAsync<string>(@"
             SELECT Name
             FROM Items
             WHERE Id = @Id
-        ", new { Id = newItemId });
+        ", new { newItem.Id });
         Assert.AreEqual(setUpItem.Name, retrievedName);
     }
 

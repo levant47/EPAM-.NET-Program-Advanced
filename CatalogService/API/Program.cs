@@ -13,29 +13,10 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 
-var databaseConnectionStringFormat = builder.Configuration["DatabaseConnectionStringFormat"]!;
-var databaseName = builder.Configuration["DatabaseName"]!.Replace("'", "").Replace("\"", "").Replace("\\", ""); // just in case
-builder.Services.AddScoped(_ => new MySqlConnection(string.Format(databaseConnectionStringFormat, databaseName)));
+var databaseConnectionString = builder.Configuration["Database"];
+builder.Services.AddScoped(_ => new MySqlConnection(databaseConnectionString));
 
 var app = builder.Build();
-
-// create database if it doesn't exist
-{
-    await using var sysConnection = new MySqlConnection(string.Format(databaseConnectionStringFormat, "sys"));
-    var targetDbExists = await sysConnection.QueryFirstOrDefaultAsync<bool>(@$"
-        SELECT 1
-        FROM information_schema.SCHEMATA
-        WHERE SCHEMA_NAME = '{databaseName}'
-    ");
-    if (!targetDbExists)
-    {
-        await sysConnection.ExecuteAsync($"CREATE DATABASE {databaseName}; USE {databaseName}");
-
-        using var scope = app.Services.CreateScope();
-        await using var targetDbConnection = scope.ServiceProvider.GetRequiredService<MySqlConnection>();
-        await Schema.Create(targetDbConnection);
-    }
-}
 
 // Configure the request pipeline
 
