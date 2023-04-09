@@ -1,7 +1,7 @@
 ﻿public class BaseRepository<T>
 {
-    private readonly MySqlConnection _connection;
-    private readonly string _table;
+    protected readonly MySqlConnection _connection;
+    protected readonly string _table;
 
     public BaseRepository(MySqlConnection connection, string table)
     {

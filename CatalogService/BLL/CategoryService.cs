@@ -8,17 +8,19 @@
 
     public Task<IEnumerable<CategoryEntity>> GetAll() => _repository.GetAll();
 
-    public async Task<int> Create(CategoryCreateDto newCategory)
+    public async Task<CategoryEntity> Create(CategoryCreateDto newCategory)
     {
         await ValidateCategory(newCategory);
-        return await _repository.Create(newCategory);
+        var id = await _repository.Create(newCategory);
+        return (await _repository.GetById(id))!;
     }
 
-    public async Task Update(int id, CategoryUpdateDto update)
+    public async Task<CategoryEntity> Update(int id, CategoryUpdateDto update)
     {
         if (!await _repository.Exists(id)) { throw new BadRequestException($"Invalid category ID: {id}"); }
         await ValidateCategory(update);
         await _repository.Update(id, update);
+        return (await _repository.GetById(id))!;
     }
 
     public async Task Delete(int id)

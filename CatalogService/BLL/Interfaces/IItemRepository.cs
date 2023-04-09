@@ -4,6 +4,10 @@
 
     Task<IEnumerable<ItemEntity>> GetAll();
 
+    Task<IEnumerable<ItemEntity>> GetByFilter(ItemFilterDto filter);
+
+    Task<int> GetCountByFilter(ItemFilterDto filter);
+
     Task<int> Create(ItemCreateDto newItem);
 
     Task<bool> Exists(int id);

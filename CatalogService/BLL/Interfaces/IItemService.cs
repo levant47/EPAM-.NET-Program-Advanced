@@ -4,9 +4,11 @@
 
     Task<IEnumerable<ItemEntity>> GetAll();
 
-    Task<int> Create(ItemCreateDto newItem);
+    Task<ItemPageDto> GetByFilter(ItemFilterDto filter);
 
-    Task Update(int id, ItemUpdateDto update);
+    Task<ItemEntity> Create(ItemCreateDto newItem);
+
+    Task<ItemEntity> Update(int id, ItemUpdateDto update);
 
     Task Delete(int id);
 }

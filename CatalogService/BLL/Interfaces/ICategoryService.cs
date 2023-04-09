@@ -4,9 +4,9 @@
 
     Task<IEnumerable<CategoryEntity>> GetAll();
 
-    Task<int> Create(CategoryCreateDto newCategory);
+    Task<CategoryEntity> Create(CategoryCreateDto newCategory);
 
-    Task Update(int id, CategoryUpdateDto update);
+    Task<CategoryEntity> Update(int id, CategoryUpdateDto update);
 
     Task Delete(int id);
 }

@@ -23,7 +23,7 @@
             FOREIGN KEY (CategoryId)
                 REFERENCES Categories (Id)
                 ON UPDATE RESTRICT
-                ON DELETE RESTRICT
+                ON DELETE CASCADE
         );
     ");
 }
