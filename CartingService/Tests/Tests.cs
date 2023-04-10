@@ -29,9 +29,9 @@ public class Tests
         var otherCartId = "2";
         var setUpItems = new ItemEntity[]
         {
-            new() { Id = GetNextId(), Name = "Item 1", CartId = setUpCartId, Price = 10, Quantity = 11 },
-            new() { Id = GetNextId(), Name = "Item 2", CartId = otherCartId, Price = 10, Quantity = 11 },
-            new() { Id = GetNextId(), Name = "Item 3", CartId = setUpCartId, Price = 10, Quantity = 11 },
+            new() { Id = GetNextId(), Name = "Item 1", CartId = setUpCartId, Price = 10, Amount = 11 },
+            new() { Id = GetNextId(), Name = "Item 2", CartId = otherCartId, Price = 10, Amount = 11 },
+            new() { Id = GetNextId(), Name = "Item 3", CartId = setUpCartId, Price = 10, Amount = 11 },
         };
         await _mongoCollection.InsertManyAsync(setUpItems);
 
@@ -50,7 +50,7 @@ public class Tests
             Id = GetNextId(),
             Name = "My New Item",
             Price = 10,
-            Quantity = 11,
+            Amount = 11,
         };
 
         await _service.Create("1", setUpItem);
@@ -63,13 +63,13 @@ public class Tests
     {
         Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "" }));
         Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "Name", Price = 0 }));
-        Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "Name", Price = 10, Quantity = 0 }));
+        Assert.ThrowsAsync<BadRequestException>(() => _service.Create("1", new() { Name = "Name", Price = 10, Amount = 0 }));
     }
 
     [Test]
     public async Task DeleteWorks()
     {
-        var setUpItem = new ItemEntity { Id = GetNextId(), Name = "To Be Deleted", CartId = "1", Price = 10, Quantity = 11 };
+        var setUpItem = new ItemEntity { Id = GetNextId(), Name = "To Be Deleted", CartId = "1", Price = 10, Amount = 11 };
         await _mongoCollection.InsertOneAsync(setUpItem);
 
         await _service.Delete(setUpItem.Id);

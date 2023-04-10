@@ -13,6 +13,9 @@ builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
 
+var kafkaServer = builder.Configuration["Kafka"]!;
+builder.Services.AddScoped<IMessagingService, MessagingService>(_ => new(kafkaServer));
+
 var databaseConnectionString = builder.Configuration["Database"];
 builder.Services.AddScoped(_ => new MySqlConnection(databaseConnectionString));
 

@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Shared.API\Shared.API.csproj" />
     <ProjectReference Include="..\DAL\DAL.csproj" />
+    <ProjectReference Include="..\Messaging\Messaging.csproj" />
   </ItemGroup>
 
 </Project>

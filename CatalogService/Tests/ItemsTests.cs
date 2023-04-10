@@ -11,8 +11,10 @@
         _setUpCategoryId = (await DataHelper.SetUpCategories(1, connection)).First().Id;
     }
 
+    private class FakeMessagingService : IMessagingService { public void Send(object message) { } }
+
     [SetUp]
-    public void SetUp() => _service = new(new ItemRepository(_connection), new CategoryRepository(_connection));
+    public void SetUp() => _service = new(new ItemRepository(_connection), new CategoryRepository(_connection), new FakeMessagingService());
 
     [Test]
     public async Task GetAllWorks()

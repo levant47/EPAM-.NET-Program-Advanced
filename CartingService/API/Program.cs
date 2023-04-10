@@ -26,6 +26,10 @@ builder.Services.AddSingleton<IItemRepository, ItemRepository>();
 
 builder.Services.AddSingleton(new MongoClient(builder.Configuration["DatabaseConnection"]).GetDatabase(builder.Configuration["DatabaseName"]));
 
+builder.Services.AddSingleton<MessagingService>();
+
+builder.Services.AddHostedService<MessagingHostedService>();
+
 var app = builder.Build();
 
 // Configure the request pipeline
