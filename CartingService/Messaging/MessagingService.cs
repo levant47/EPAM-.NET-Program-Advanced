@@ -21,14 +21,24 @@ public class MessagingService
         while (!cancellationToken.IsCancellationRequested)
         {
             var message = consumer.Consume(cancellationToken);
-            try
+            var messageHandled = false;
+            while (!messageHandled)
             {
-                if (message.Topic == nameof(ItemUpdatedMessage))
+                try
                 {
-                    await _itemService.HandleItemUpdated(JsonSerializer.Deserialize<ItemUpdatedMessage>(message.Message.Value)!);
+                    if (message.Topic == nameof(ItemUpdatedMessage))
+                    {
+                        await _itemService.HandleItemUpdated(JsonSerializer.Deserialize<ItemUpdatedMessage>(message.Message.Value)!);
+                    }
+                    messageHandled = true;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception.ToString());
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                    if (cancellationToken.IsCancellationRequested) { return; }
                 }
             }
-            catch (Exception exception) { _logger.LogError(exception.ToString()); }
         }
         consumer.Close();
     }
