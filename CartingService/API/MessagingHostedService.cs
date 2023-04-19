@@ -1,11 +1,13 @@
-﻿public class MessagingHostedService : IHostedService
+﻿public record MessagingServiceConfiguration(string Server, string Group);
+
+public class MessagingHostedService : IHostedService
 {
     private readonly MessagingService _messagingService;
-    private readonly IConfiguration _configuration;
+    private readonly MessagingServiceConfiguration _configuration;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger _logger;
 
-    public MessagingHostedService(MessagingService messagingService, IConfiguration configuration, ILogger<MessagingHostedService> logger)
+    public MessagingHostedService(MessagingService messagingService, MessagingServiceConfiguration configuration, ILogger<MessagingHostedService> logger)
     {
         _messagingService = messagingService;
         _configuration = configuration;
@@ -18,7 +20,7 @@
         {
             try
             {
-                await _messagingService.Consume(_configuration["Kafka"]!, _configuration["KafkaGroup"]!, _cancellationTokenSource.Token);
+                await _messagingService.Consume(_configuration.Server, _configuration.Group, _cancellationTokenSource.Token);
             }
             catch (Exception exception)
             {

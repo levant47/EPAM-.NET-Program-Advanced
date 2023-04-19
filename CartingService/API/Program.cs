@@ -21,12 +21,18 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddSingleton<ICartService, CartService>();
 builder.Services.AddSingleton<IItemService, ItemService>();
+builder.Services.AddSingleton<IMessageHandler<ItemUpdatedMessage>, ItemService>();
 
 builder.Services.AddSingleton<IItemRepository, ItemRepository>();
 
 builder.Services.AddSingleton(new MongoClient(builder.Configuration["DatabaseConnection"]).GetDatabase(builder.Configuration["DatabaseName"]));
 
 builder.Services.AddSingleton<MessagingService>();
+
+builder.Services.AddSingleton(new MessagingServiceConfiguration(
+    builder.Configuration["KafkaServer"] ?? throw new("KafkaServer configuration missing"),
+    builder.Configuration["KafkaGroup"] ?? throw new("KafkaGroup configuration missing")
+));
 
 builder.Services.AddHostedService<MessagingHostedService>();
 

@@ -25,5 +25,11 @@
                 ON UPDATE RESTRICT
                 ON DELETE CASCADE
         );
+
+        CREATE TABLE Messages (
+            Id INT AUTO_INCREMENT PRIMARY KEY,
+            Name TEXT NOT NULL,
+            Contents TEXT NOT NULL
+        );
     ");
 }

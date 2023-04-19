@@ -14,7 +14,7 @@ public class ItemRepository : IItemRepository
 
     public Task Delete(ItemFilterDto filter) => _collection.DeleteManyAsync(MakeMongoFilter(filter));
 
-    public Task Update(ItemFilterDto filter, object update)
+    public Task Update(ItemFilterDto filter, ItemSharedBase update)
     {
         UpdateDefinition<ItemEntity>? completeUpdateDefinition = null;
         foreach (var property in update.GetType().GetProperties())

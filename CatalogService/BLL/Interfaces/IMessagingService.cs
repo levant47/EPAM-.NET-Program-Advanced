@@ -1,4 +1,4 @@
 ﻿public interface IMessagingService
 {
-    void Send(object message);
+    Task Send(object message);
 }

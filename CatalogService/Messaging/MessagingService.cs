@@ -1,17 +1,21 @@
-﻿using System.Collections.Concurrent;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
 public class MessagingService : IMessagingService
 {
-    private static readonly ConcurrentQueue<object> _messages = new();
-
+    private readonly IMessageRepository _messageRepository;
+    private readonly ITransaction _transaction;
     private readonly ILogger _logger;
 
-    public MessagingService(ILogger<MessagingService> logger) => _logger = logger;
+    public MessagingService(IMessageRepository messageRepository, ITransaction transaction, ILogger<MessagingService> logger)
+    {
+        _messageRepository = messageRepository;
+        _transaction = transaction;
+        _logger = logger;
+    }
 
-    public void Send(object message) => _messages.Enqueue(message);
+    public Task Send(object message) => _messageRepository.Create(message.GetType().Name, JsonSerializer.Serialize(message));
 
     public async Task Produce(string server, CancellationToken cancellationToken)
     {
@@ -19,27 +23,27 @@ public class MessagingService : IMessagingService
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            var anyMessagesSent = false;
-            while (_messages.TryDequeue(out var message))
+            try
             {
-                var messageSent = false;
-                while (!messageSent)
+                var messages = (await _messageRepository.GetAll()).ToArray();
+                if (messages.Any())
                 {
-                    try
+                    using var transaction = await _transaction.Start();
+                    foreach (var message in messages)
                     {
-                        await producer.ProduceAsync(message.GetType().Name, new() { Value = JsonSerializer.Serialize(message) }, cancellationToken);
-                        messageSent = true;
+                        await producer.ProduceAsync(message.Name, new() { Value = message.Contents }, cancellationToken);
+                        await _messageRepository.Delete(message.Id);
                     }
-                    catch (Exception exception)
-                    {
-                        _logger.LogError(exception.ToString());
-                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken); // avoid spamming Kafka in case of an error
-                        if (cancellationToken.IsCancellationRequested) { return; }
-                    }
+                    producer.Flush(cancellationToken);
+                    transaction.Commit();
                 }
-                anyMessagesSent = true;
             }
-            if (anyMessagesSent) { producer.Flush(cancellationToken); }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception.ToString());
+                await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken); // avoid spamming Kafka in case of an error
+                if (cancellationToken.IsCancellationRequested) { return; }
+            }
 
             await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken); // wait for new messages
         }

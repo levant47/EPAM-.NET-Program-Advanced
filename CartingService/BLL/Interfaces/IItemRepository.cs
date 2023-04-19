@@ -8,5 +8,5 @@
 
     Task Delete(ItemFilterDto filter);
 
-    Task Update(ItemFilterDto filter, object update);
+    Task Update(ItemFilterDto filter, ItemSharedBase update);
 }

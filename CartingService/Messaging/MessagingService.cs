@@ -4,12 +4,12 @@ using Microsoft.Extensions.Logging;
 
 public class MessagingService
 {
-    private readonly IItemService _itemService;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger _logger;
 
-    public MessagingService(IItemService itemService, ILogger<MessagingService> logger)
+    public MessagingService(IServiceProvider serviceProvider, ILogger<MessagingService> logger)
     {
-        _itemService = itemService;
+        _serviceProvider = serviceProvider;
         _logger = logger;
     }
 
@@ -21,23 +21,41 @@ public class MessagingService
         while (!cancellationToken.IsCancellationRequested)
         {
             var message = consumer.Consume(cancellationToken);
-            var messageHandled = false;
-            while (!messageHandled)
+            // resolve the handler for this message and invoke it
+            var sharedBllAssembly = typeof(MessageAssemblyMarker).Assembly;
+            var messageTypeName = message.Topic;
+            var messageType = sharedBllAssembly.GetTypes().FirstOrDefault(type => type.Name == messageTypeName);
+            if (messageType != null)
             {
-                try
+                var handlerType = typeof(IMessageHandler<>).MakeGenericType(messageType);
+                var handler = _serviceProvider.GetService(handlerType);
+                if (handler != null)
                 {
-                    if (message.Topic == nameof(ItemUpdatedMessage))
+                    var handlerMethod = handlerType.GetMethod(nameof(IMessageHandler<object>.Handle))!;
+                    var messageHandled = false;
+                    while (!messageHandled)
                     {
-                        await _itemService.HandleItemUpdated(JsonSerializer.Deserialize<ItemUpdatedMessage>(message.Message.Value)!);
+                        try
+                        {
+                            await (Task)handlerMethod.Invoke(handler, new[] { JsonSerializer.Deserialize(message.Message.Value, messageType) })!;
+                            consumer.Commit();
+                            messageHandled = true;
+                        }
+                        catch (Exception exception)
+                        {
+                            _logger.LogError(exception.ToString());
+                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                        }
                     }
-                    messageHandled = true;
                 }
-                catch (Exception exception)
+                else
                 {
-                    _logger.LogError(exception.ToString());
-                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
-                    if (cancellationToken.IsCancellationRequested) { return; }
+                    _logger.LogWarning($"Handler for message type {messageTypeName} was not found");
                 }
+            }
+            else
+            {
+                _logger.LogWarning($"Message type {messageTypeName} was not recognized");
             }
         }
         consumer.Close();

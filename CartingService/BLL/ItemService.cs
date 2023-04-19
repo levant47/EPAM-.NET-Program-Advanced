@@ -1,4 +1,4 @@
-﻿public class ItemService : IItemService
+﻿public class ItemService : IItemService, IMessageHandler<ItemUpdatedMessage>
 {
     private readonly IItemRepository _repository;
 
@@ -33,5 +33,5 @@
         await _repository.Delete(new() { Id = id });
     }
 
-    public Task HandleItemUpdated(ItemUpdatedMessage message) => _repository.Update(new() { Id = message.ItemId }, message.Update);
+    public Task Handle(ItemUpdatedMessage message) => _repository.Update(new() { Id = message.ItemId }, message.Update);
 }

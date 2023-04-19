@@ -1,5 +1,4 @@
-﻿global using System.Collections;
-global using System.Collections.Immutable;
+﻿global using System.Collections.Immutable;
 global using System.Reflection;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.AspNetCore.Mvc.Abstractions;

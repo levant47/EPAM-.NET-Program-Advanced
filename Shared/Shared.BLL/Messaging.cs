@@ -1,4 +1,6 @@
-﻿public class ItemUpdatedMessage
+﻿public static class MessageAssemblyMarker { }
+
+public class ItemUpdatedMessage
 {
     public int ItemId { get; set; }
 

@@ -5,6 +5,4 @@
     Task<ItemEntity> Create(string cartId, ItemCreateDto newItem);
 
     Task Delete(int id);
-
-    Task HandleItemUpdated(ItemUpdatedMessage message);
 }

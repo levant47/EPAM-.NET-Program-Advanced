@@ -3,12 +3,19 @@
     private readonly IItemRepository _repository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IMessagingService _messagingService;
+    private readonly ITransaction _transaction;
 
-    public ItemService(IItemRepository repository, ICategoryRepository categoryRepository, IMessagingService messagingService)
+    public ItemService(
+        IItemRepository repository,
+        ICategoryRepository categoryRepository,
+        IMessagingService messagingService,
+        ITransaction transaction
+    )
     {
         _repository = repository;
         _categoryRepository = categoryRepository;
         _messagingService = messagingService;
+        _transaction = transaction;
     }
 
     public Task<ItemEntity?> GetById(int id) => _repository.GetById(id);
@@ -32,8 +39,10 @@
     {
         if (!await _repository.Exists(id)) { throw new BadRequestException($"Invalid item ID: {id}"); }
         await ValidateItem(update);
+        using var transaction = await _transaction.Start();
         await _repository.Update(id, update);
-        _messagingService.Send(new ItemUpdatedMessage { ItemId = id, Update = update });
+        await _messagingService.Send(new ItemUpdatedMessage { ItemId = id, Update = update });
+        transaction.Commit();
         return (await _repository.GetById(id))!;
     }
 
