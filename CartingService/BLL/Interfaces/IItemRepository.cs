@@ -7,4 +7,6 @@
     Task<bool> Exists(ItemFilterDto filter);
 
     Task Delete(ItemFilterDto filter);
+
+    Task Update(ItemFilterDto filter, ItemSharedBase update);
 }

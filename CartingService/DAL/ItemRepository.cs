@@ -14,6 +14,21 @@ public class ItemRepository : IItemRepository
 
     public Task Delete(ItemFilterDto filter) => _collection.DeleteManyAsync(MakeMongoFilter(filter));
 
+    public Task Update(ItemFilterDto filter, ItemSharedBase update)
+    {
+        UpdateDefinition<ItemEntity>? completeUpdateDefinition = null;
+        foreach (var property in update.GetType().GetProperties())
+        {
+            var propertyUpdateDefinition = Builders<ItemEntity>.Update.Set(
+                new StringFieldDefinition<ItemEntity, object?>(property.Name),
+                property.GetValue(update)
+            );
+            if (completeUpdateDefinition == null) { completeUpdateDefinition = propertyUpdateDefinition; }
+            else { completeUpdateDefinition = Builders<ItemEntity>.Update.Combine(completeUpdateDefinition, propertyUpdateDefinition); }
+        }
+        return _collection.UpdateManyAsync(MakeMongoFilter(filter), completeUpdateDefinition);
+    }
+
     private FilterDefinition<ItemEntity> MakeMongoFilter(ItemFilterDto filter)
     {
         var result = Builders<ItemEntity>.Filter.Empty;

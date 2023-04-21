@@ -2,11 +2,20 @@
 {
     private readonly IItemRepository _repository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IMessagingService _messagingService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ItemService(IItemRepository repository, ICategoryRepository categoryRepository)
+    public ItemService(
+        IItemRepository repository,
+        ICategoryRepository categoryRepository,
+        IMessagingService messagingService,
+        IUnitOfWork unitOfWork
+    )
     {
         _repository = repository;
         _categoryRepository = categoryRepository;
+        _messagingService = messagingService;
+        _unitOfWork = unitOfWork;
     }
 
     public Task<ItemEntity?> GetById(int id) => _repository.GetById(id);
@@ -30,7 +39,10 @@
     {
         if (!await _repository.Exists(id)) { throw new BadRequestException($"Invalid item ID: {id}"); }
         await ValidateItem(update);
+        await _unitOfWork.Start();
         await _repository.Update(id, update);
+        await _messagingService.Save(new ItemUpdatedMessage { ItemId = id, Update = update });
+        _unitOfWork.Commit();
         return (await _repository.GetById(id))!;
     }
 

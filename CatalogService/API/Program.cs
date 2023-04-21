@@ -12,9 +12,16 @@ builder.Services.AddScoped<IItemService, ItemService>();
 
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IItemRepository, ItemRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+
+builder.Services.AddScoped<IMessagingService, MessagingService>();
+builder.Services.AddSingleton<MessagingService>();
+
+builder.Services.AddHostedService<MessagingHostedService>();
 
 var databaseConnectionString = builder.Configuration["Database"];
 builder.Services.AddScoped(_ => new MySqlConnection(databaseConnectionString));
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 

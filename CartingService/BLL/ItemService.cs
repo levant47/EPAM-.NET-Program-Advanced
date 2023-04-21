@@ -1,4 +1,4 @@
-﻿public class ItemService : IItemService
+﻿public class ItemService : IItemService, IMessageHandler<ItemUpdatedMessage>
 {
     private readonly IItemRepository _repository;
 
@@ -11,7 +11,7 @@
     {
         if (newItem.Name == "") { throw new BadRequestException("Name cannot be empty"); }
         if (newItem.Price <= 0) { throw new BadRequestException("Price must be greater than zero"); }
-        if (newItem.Quantity <= 0) { throw new BadRequestException("Quantity must be greater than zero"); }
+        if (newItem.Amount <= 0) { throw new BadRequestException("Amount must be greater than zero"); }
         var newEntity = new ItemEntity
         {
             Id = newItem.Id,
@@ -19,7 +19,7 @@
             ImageUrl = newItem.ImageUrl,
             ImageAltText = newItem.ImageAltText,
             Price = newItem.Price,
-            Quantity = newItem.Quantity,
+            Amount = newItem.Amount,
             CartId = cartId,
         };
         await _repository.Create(newEntity);
@@ -32,4 +32,6 @@
         if (!await _repository.Exists(new() { Id = id })) { throw new NotFoundException($"Item with ID {id} was not found"); }
         await _repository.Delete(new() { Id = id });
     }
+
+    public Task Handle(ItemUpdatedMessage message) => _repository.Update(new() { Id = message.ItemId }, message.Update);
 }
