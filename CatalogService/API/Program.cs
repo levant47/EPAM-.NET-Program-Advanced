@@ -21,7 +21,7 @@ builder.Services.AddHostedService<MessagingHostedService>();
 
 var databaseConnectionString = builder.Configuration["Database"];
 builder.Services.AddScoped(_ => new MySqlConnection(databaseConnectionString));
-builder.Services.AddTransient<ITransaction, Transaction>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 

@@ -5,17 +5,17 @@ using Microsoft.Extensions.Logging;
 public class MessagingService : IMessagingService
 {
     private readonly IMessageRepository _messageRepository;
-    private readonly ITransaction _transaction;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger _logger;
 
-    public MessagingService(IMessageRepository messageRepository, ITransaction transaction, ILogger<MessagingService> logger)
+    public MessagingService(IMessageRepository messageRepository, IUnitOfWork unitOfWork, ILogger<MessagingService> logger)
     {
         _messageRepository = messageRepository;
-        _transaction = transaction;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
-    public Task Send(object message) => _messageRepository.Create(message.GetType().Name, JsonSerializer.Serialize(message));
+    public Task Save(object message) => _messageRepository.Create(message.GetType().Name, JsonSerializer.Serialize(message));
 
     public async Task Produce(string server, CancellationToken cancellationToken)
     {
@@ -28,14 +28,14 @@ public class MessagingService : IMessagingService
                 var messages = (await _messageRepository.GetAll()).ToArray();
                 if (messages.Any())
                 {
-                    using var transaction = await _transaction.Start();
+                    await _unitOfWork.Start();
                     foreach (var message in messages)
                     {
                         await producer.ProduceAsync(message.Name, new() { Value = message.Contents }, cancellationToken);
                         await _messageRepository.Delete(message.Id);
                     }
                     producer.Flush(cancellationToken);
-                    transaction.Commit();
+                    _unitOfWork.Commit();
                 }
             }
             catch (Exception exception)
