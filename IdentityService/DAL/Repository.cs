@@ -4,11 +4,10 @@
 
     public Repository(SQLiteConnection connection) => _connection = connection;
 
-    public Task<IEnumerable<Permission>> Login(string username, string hashedPassword) => _connection.QueryAsync<Permission>("""
-        SELECT Permissions.Permission
+    public Task<IEnumerable<UserPermissionPairDto>> Login(string username, string hashedPassword) => _connection.QueryAsync<UserPermissionPairDto>("""
+        SELECT Users.Id, Permissions.Permission
         FROM Users
-        JOIN Roles ON Users.RoleId = Roles.Id
-        JOIN Permissions ON Roles.Id = Permissions.RoleId
+        JOIN Permissions ON Users.RoleId = Permissions.RoleId
         WHERE Users.Username = @Username AND Users.Password = @Password
     """, new { Username = username, Password = hashedPassword });
 
@@ -35,4 +34,11 @@
         INSERT INTO Users (Username, Password, RoleId)
         VALUES (@Username, @Password, @RoleId)
     """, new { Username = username, Password = hashedPassword, RoleId = roleId });
+
+    public Task<IEnumerable<Permission>> GetUserPermissionsById(int id) => _connection.QueryAsync<Permission>("""
+        SELECT Permissions.Permission
+        FROM Users
+        JOIN Permissions ON Users.RoleId = Permissions.RoleId
+        WHERE Users.Id = @Id
+    """, new { Id = id });
 }

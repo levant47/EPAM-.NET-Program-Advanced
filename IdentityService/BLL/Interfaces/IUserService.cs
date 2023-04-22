@@ -1,4 +1,6 @@
 ﻿public interface IUserService
 {
-    Task<Permission[]> Login(LoginDto login);
+    Task<LoginSuccessDto> Login(LoginDto login);
+
+    Task<Permission[]> GetPermissionById(int id);
 }
