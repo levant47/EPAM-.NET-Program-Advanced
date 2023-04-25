@@ -18,7 +18,7 @@
         _unitOfWork = unitOfWork;
     }
 
-    public Task<ItemEntity?> GetById(int id) => _repository.GetById(id);
+    public async Task<ItemEntity> GetById(int id) => await _repository.GetById(id) ?? throw new NotFoundException($"Item with ID {id} was not found");
 
     public Task<IEnumerable<ItemEntity>> GetAll() => _repository.GetAll();
 

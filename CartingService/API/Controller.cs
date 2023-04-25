@@ -50,6 +50,13 @@ public class Controller : ControllerBase
         ));
     }
 
+    [HttpGet("items/{id}")]
+    public async Task<ActionResult<ItemEntity>> GetItem(int id)
+    {
+        var item = await _itemService.GetById(id);
+        return Ok(Hateoas(item, ItemLinks(item)));
+    }
+
     private List<Link> ItemLinks(ItemEntity item)
     {
         var routeValues = HttpContext.GetRouteData().Values.ToImmutableDictionary();

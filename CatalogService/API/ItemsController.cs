@@ -33,6 +33,14 @@ public class ItemsController : ControllerBase
         ));
     }
 
+    [Permission(Permission.Read)]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ItemEntity>> Get(int id)
+    {
+        var item = await _service.GetById(id);
+        return Ok(Hateoas(item, Links(item)));
+    }
+
     [Permission(Permission.Create)]
     [HttpPost]
     public async Task<ActionResult<ItemEntity>> Create(ItemCreateDto newItem)

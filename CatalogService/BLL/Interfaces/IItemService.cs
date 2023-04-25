@@ -1,6 +1,6 @@
 ﻿public interface IItemService
 {
-    Task<ItemEntity?> GetById(int id);
+    Task<ItemEntity> GetById(int id);
 
     Task<IEnumerable<ItemEntity>> GetAll();
 
