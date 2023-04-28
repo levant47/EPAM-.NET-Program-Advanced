@@ -6,9 +6,9 @@
 
     public async Task<LoginSuccessDto> Login(LoginDto login)
     {
-        var pairs = (await _repository.Login(login.Username, PasswordHasher.HashPassword(login.Password))).ToArray();
-        if (pairs.Length == 0) { throw new BadRequestException("Invalid credentials"); }
-        return new() { Id = pairs[0].Id, Permissions = pairs.Select(pair => pair.Permission).ToArray() };
+        var id = await _repository.GetUserIdByCredentials(login.Username, PasswordHasher.HashPassword(login.Password))
+            ?? throw new BadRequestException("Invalid credentials");
+        return new() { Id = id, Permissions = (await _repository.GetUserPermissionsById(id)).ToArray() };
     }
 
     public async Task<Permission[]> GetPermissionById(int id)

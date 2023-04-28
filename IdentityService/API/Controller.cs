@@ -4,11 +4,13 @@ public class Controller : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly JwtConfiguration _jwtConfiguration;
+    private readonly Jwt _jwt;
 
-    public Controller(IUserService userService, JwtConfiguration jwtConfiguration)
+    public Controller(IUserService userService, JwtConfiguration jwtConfiguration, Jwt jwt)
     {
         _userService = userService;
         _jwtConfiguration = jwtConfiguration;
+        _jwt = jwt;
     }
 
     [HttpPost("login")]
@@ -19,8 +21,8 @@ public class Controller : ControllerBase
         var refreshTokenClaims = new[] { new Claim("Id", user.Id.ToString()) };
         return new()
         {
-            IdentityToken = Jwt.Generate(identityTokenClaims, TimeSpan.FromSeconds(_jwtConfiguration.IdentityTokenExpiresInSeconds)),
-            RefreshToken = Jwt.Generate(refreshTokenClaims, TimeSpan.FromSeconds(_jwtConfiguration.RefreshTokenExpiresInSeconds)),
+            IdentityToken = _jwt.Generate(identityTokenClaims, TimeSpan.FromSeconds(_jwtConfiguration.IdentityTokenExpiresInSeconds)),
+            RefreshToken = _jwt.Generate(refreshTokenClaims, TimeSpan.FromSeconds(_jwtConfiguration.RefreshTokenExpiresInSeconds)),
         };
     }
 
@@ -34,7 +36,7 @@ public class Controller : ControllerBase
     {
         var permissions = await _userService.GetPermissionById(GetUserId());
         var claims = permissions.Select(permission => new Claim("Permission", ((int)permission).ToString())).ToArray();
-        return Jwt.Generate(claims, TimeSpan.FromSeconds(_jwtConfiguration.IdentityTokenExpiresInSeconds));
+        return _jwt.Generate(claims, TimeSpan.FromSeconds(_jwtConfiguration.IdentityTokenExpiresInSeconds));
     }
 
     private int GetUserId() => int.Parse(HttpContext.User.Claims.First(claim => claim.Type == "Id").Value);
