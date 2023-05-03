@@ -4,11 +4,10 @@
 
     public Repository(SQLiteConnection connection) => _connection = connection;
 
-    public Task<IEnumerable<UserPermissionPairDto>> Login(string username, string hashedPassword) => _connection.QueryAsync<UserPermissionPairDto>("""
-        SELECT Users.Id, Permissions.Permission
+    public Task<int?> GetUserIdByCredentials(string username, string hashedPassword) => _connection.QueryFirstOrDefaultAsync<int?>("""
+        SELECT Id
         FROM Users
-        JOIN Permissions ON Users.RoleId = Permissions.RoleId
-        WHERE Users.Username = @Username AND Users.Password = @Password
+        WHERE Username = @Username AND Password = @Password
     """, new { Username = username, Password = hashedPassword });
 
     public Task<int> GetRoleCount() => _connection.QueryFirstAsync<int>("""

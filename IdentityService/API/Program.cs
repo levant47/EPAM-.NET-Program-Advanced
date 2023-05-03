@@ -25,11 +25,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"]!));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters.ValidateIssuerSigningKey = true;
-        options.TokenValidationParameters.IssuerSigningKey = Jwt.Key;
+        options.TokenValidationParameters.IssuerSigningKey = jwtKey;
         options.TokenValidationParameters.ValidateAudience = false;
         options.TokenValidationParameters.ValidateIssuer = false;
         // the default validator checks the expiry date according to local time, and we want to use UTC
@@ -48,6 +49,7 @@ builder.Services.AddSingleton(new JwtConfiguration
     IdentityTokenExpiresInSeconds = int.Parse(builder.Configuration["IdentityTokenExpiresInSeconds"]!),
     RefreshTokenExpiresInSeconds = int.Parse(builder.Configuration["RefreshTokenExpiresInSeconds"]!),
 });
+builder.Services.AddSingleton(jwtKey);
 
 var app = builder.Build();
 
