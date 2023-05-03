@@ -1,6 +1,6 @@
 ﻿public interface IRepository
 {
-    Task<IEnumerable<UserPermissionPairDto>> Login(string username, string hashedPassword);
+    Task<int?> GetUserIdByCredentials(string username, string hashedPassword);
 
     Task<int> GetRoleCount();
 
