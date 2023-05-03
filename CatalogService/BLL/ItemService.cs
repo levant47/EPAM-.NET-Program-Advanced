@@ -41,7 +41,13 @@
         await ValidateItem(update);
         await _unitOfWork.Start();
         await _repository.Update(id, update);
-        await _messagingService.Save(new ItemUpdatedMessage { ItemId = id, Update = update });
+        await _messagingService.Save(new ItemUpdatedMessage
+        {
+            TraceId = Activity.Current?.TraceId.ToString(),
+            SpanId = Activity.Current?.SpanId.ToString(),
+            ItemId = id,
+            Update = update,
+        });
         _unitOfWork.Commit();
         return (await _repository.GetById(id))!;
     }

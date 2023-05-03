@@ -37,6 +37,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddJaegerTracing("Carting Service");
+
 builder.Services.AddSingleton<ICartService, CartService>();
 builder.Services.AddSingleton<IItemService, ItemService>();
 builder.Services.AddSingleton<IMessageHandler<ItemUpdatedMessage>, ItemService>();

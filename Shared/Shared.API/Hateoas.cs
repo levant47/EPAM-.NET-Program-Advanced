@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-// technically href should never be null, but when ASP.NET fails to generate the link, then it returns null, so let's just include it in the signature
+﻿// technically href should never be null, but when ASP.NET fails to generate the link, then it returns null, so let's just include it in the signature
 // to ease debugging and make the compiler warnings shut up
 public record Link(string Name, string? Href);
 
