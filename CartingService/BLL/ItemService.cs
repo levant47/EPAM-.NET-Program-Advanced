@@ -33,5 +33,12 @@
         await _repository.Delete(new() { Id = id });
     }
 
+    public async Task<ItemEntity> GetById(int id)
+    {
+        var matchingItems = await _repository.GetByFilter(new() { Id = id });
+        if (matchingItems.Count == 0) { throw new NotFoundException($"Item with ID {id} was not found"); }
+        return matchingItems[0];
+    }
+
     public Task Handle(ItemUpdatedMessage message) => _repository.Update(new() { Id = message.ItemId }, message.Update);
 }

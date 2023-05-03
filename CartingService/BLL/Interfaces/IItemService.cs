@@ -5,4 +5,6 @@
     Task<ItemEntity> Create(string cartId, ItemCreateDto newItem);
 
     Task Delete(int id);
+
+    Task<ItemEntity> GetById(int id);
 }

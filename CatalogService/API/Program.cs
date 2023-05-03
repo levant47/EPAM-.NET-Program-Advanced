@@ -56,6 +56,10 @@ app.Use(next => async context =>
     {
         await Results.BadRequest(new ProblemDetails { Title = "Invalid Request", Detail = exception.Message }).ExecuteAsync(context);
     }
+    catch (NotFoundException exception)
+    {
+        await Results.NotFound(new ProblemDetails { Title = "Not Found", Detail = exception.Message }).ExecuteAsync(context);
+    }
 });
 
 app.MapControllers();
