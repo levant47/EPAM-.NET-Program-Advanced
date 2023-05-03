@@ -7,6 +7,7 @@ public class CategoriesController : ControllerBase
 
     public CategoriesController(ICategoryService service) => _service = service;
 
+    [Permission(Permission.Read)]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryEntity>>> GetAll()
     {
@@ -17,6 +18,7 @@ public class CategoriesController : ControllerBase
         ));
     }
 
+    [Permission(Permission.Create)]
     [HttpPost]
     public async Task<ActionResult<CategoryEntity>> Create([FromBody] CategoryCreateDto newCategory)
     {
@@ -24,6 +26,7 @@ public class CategoriesController : ControllerBase
         return Ok(Hateoas(result, Links(result)));
     }
 
+    [Permission(Permission.Update)]
     [HttpPut("{id}")]
     public async Task<ActionResult<CategoryEntity>> Update(int id, CategoryUpdateDto update)
     {
@@ -31,6 +34,7 @@ public class CategoriesController : ControllerBase
         return Ok(Hateoas(result, Links(result)));
     }
 
+    [Permission(Permission.Delete)]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {

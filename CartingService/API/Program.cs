@@ -17,6 +17,24 @@ builder.Services.AddSwaggerGen(options =>
     });
     options.OperationFilter<RemoveApiVersionRouteParameterOperationFilter>();
     options.DocumentFilter<InsertVersionNumberDocumentFilter>();
+
+    options.AddSecurityDefinition(
+        "Bearer",
+        new() { In = ParameterLocation.Header, Name = "Authorization", Type = SecuritySchemeType.ApiKey, Scheme = "Bearer" }
+    );
+    options.AddSecurityRequirement(new()
+    {
+        {
+            new()
+            {
+                Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" },
+                Scheme = "oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 builder.Services.AddSingleton<ICartService, CartService>();
@@ -34,6 +52,8 @@ builder.Services.AddSingleton(new MessagingServiceConfiguration(
     builder.Configuration["KafkaGroup"] ?? throw new("KafkaGroup configuration missing")
 ));
 
+builder.Services.AddSingleton(new IdentityServiceUrl(builder.Configuration["IdentityServiceUrl"]!));
+
 builder.Services.AddHostedService<MessagingHostedService>();
 
 var app = builder.Build();
@@ -46,6 +66,8 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
     options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
 });
+
+app.UseMiddleware<AuthenticationMiddleware>();
 
 app.Use(next => async context =>
 {
