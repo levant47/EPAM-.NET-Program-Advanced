@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +16,12 @@ public class MessagingService : IMessagingService
         _logger = logger;
     }
 
-    public Task Save(object message) => _messageRepository.Create(message.GetType().Name, JsonSerializer.Serialize(message));
+    public Task Save(BaseMessage message)
+    {
+        message.TraceId = Activity.Current?.TraceId.ToString();
+        message.SpanId = Activity.Current?.SpanId.ToString();
+        return _messageRepository.Create(message.GetType().Name, JsonSerializer.Serialize(message));
+    }
 
     public async Task Produce(string server, CancellationToken cancellationToken)
     {
