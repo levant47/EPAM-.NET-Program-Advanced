@@ -25,6 +25,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddJaegerTracing("Identity Service");
+
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtKey"]!));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

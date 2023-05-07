@@ -1,4 +1,4 @@
 ﻿public interface IMessagingService
 {
-    Task Save(object message);
+    Task Save(BaseMessage message);
 }

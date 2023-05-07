@@ -11,15 +11,7 @@
         _setUpCategoryId = (await DataHelper.SetUpCategories(1, connection)).First().Id;
     }
 
-    private class FakeMessagingService : IMessagingService { public async Task Save(object message) { } }
-    private class FakeDbTransaction : IDbTransaction
-    {
-        public void Dispose() { }
-        public void Commit() { }
-        public void Rollback() { }
-        public IDbConnection? Connection => null;
-        public IsolationLevel IsolationLevel => IsolationLevel.Unspecified;
-    }
+    private class FakeMessagingService : IMessagingService { public async Task Save(BaseMessage message) { } }
     private class FakeUnitOfWork : IUnitOfWork { public Task Start() => Task.CompletedTask; public void Commit() { } }
 
     [SetUp]

@@ -9,6 +9,8 @@ builder.Services.AddOcelot();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerForOcelot(builder.Configuration);
 
+builder.Services.AddJaegerTracing("Gateway");
+
 var app = builder.Build();
 
 // Configure the request pipeline

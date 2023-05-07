@@ -26,6 +26,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddJaegerTracing("Catalog Service");
+
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 

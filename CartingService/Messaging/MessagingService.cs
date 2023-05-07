@@ -1,9 +1,12 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 
 public class MessagingService
 {
+    private static readonly ActivitySource _activitySource = new("Carting Service");
+
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger _logger;
 
@@ -37,8 +40,20 @@ public class MessagingService
                     {
                         try
                         {
-                            await (Task)handlerMethod.Invoke(handler, new[] { JsonSerializer.Deserialize(message.Message.Value, messageType) })!;
+                            var messagePayload = JsonSerializer.Deserialize(message.Message.Value, messageType)!;
+                            var baseMessage = (BaseMessage)messagePayload;
+                            using var activity = _activitySource.StartActivity(
+                                "Handling message",
+                                ActivityKind.Consumer,
+                                new ActivityContext(
+                                    ActivityTraceId.CreateFromString(baseMessage.TraceId),
+                                    ActivitySpanId.CreateFromString(baseMessage.SpanId),
+                                    ActivityTraceFlags.Recorded
+                                )
+                            );
+                            await (Task)handlerMethod.Invoke(handler, new[] { messagePayload })!;
                             consumer.Commit();
+                            activity?.Stop();
                             messageHandled = true;
                         }
                         catch (Exception exception)
