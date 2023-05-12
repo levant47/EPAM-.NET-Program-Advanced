@@ -28,6 +28,24 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddJaegerTracing("Catalog Service");
 
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddSingleton<IDataLoaderContextAccessor, DataLoaderContextAccessor>();
+builder.Services.AddSingleton<DataLoaderDocumentListener>();
+
+var schema = new GraphQL.Types.Schema { Query = new Query(), Mutation = new Mutation() };
+schema.RegisterTypeMapping(typeof(CategoryEntity), typeof(CategoryQuery));
+schema.RegisterTypeMapping(typeof(CategoryCreateDto), typeof(CategoryCreateMutationInput));
+schema.RegisterTypeMapping(typeof(CategoryUpdateDto), typeof(CategoryUpdateMutationInput));
+schema.RegisterTypeMapping(typeof(ItemEntity), typeof(ItemQuery));
+schema.RegisterTypeMapping(typeof(ItemCreateDto), typeof(ItemCreateMutationInput));
+schema.RegisterTypeMapping(typeof(ItemUpdateDto), typeof(ItemUpdateMutationInput));
+builder.Services.AddSingleton(schema);
+
+builder.Services.AddSingleton<IGraphQLSerializer, GraphQLSerializer>();
+
+builder.Services.AddScoped<IPermissionVerifier, PermissionVerifier>();
+
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 
@@ -43,6 +61,8 @@ builder.Services.AddHostedService<MessagingHostedService>();
 var databaseConnectionString = builder.Configuration["Database"];
 builder.Services.AddScoped(_ => new MySqlConnection(databaseConnectionString));
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddSingleton(new IdentityServiceUrl(builder.Configuration["IdentityServiceUrl"]!));
 
 var app = builder.Build();
 
@@ -62,6 +82,8 @@ app.Use(next => async context =>
     {
         await Results.NotFound(new ProblemDetails { Title = "Not Found", Detail = exception.Message }).ExecuteAsync(context);
     }
+    catch (UnauthenticatedException) { await Results.Unauthorized().ExecuteAsync(context); }
+    catch (UnauthorizedException) { await Results.Forbid().ExecuteAsync(context); }
 });
 
 app.MapControllers();

@@ -11,15 +11,13 @@
         _setUpCategoryId = (await DataHelper.SetUpCategories(1, connection)).First().Id;
     }
 
-    private class FakeMessagingService : IMessagingService { public async Task Save(BaseMessage message) { } }
-    private class FakeUnitOfWork : IUnitOfWork { public Task Start() => Task.CompletedTask; public void Commit() { } }
-
     [SetUp]
     public void SetUp() => _service = new(
         new ItemRepository(_connection),
         new CategoryRepository(_connection),
         new FakeMessagingService(),
-        new FakeUnitOfWork()
+        new FakeUnitOfWork(),
+        new FakePermissionVerifier()
     );
 
     [Test]

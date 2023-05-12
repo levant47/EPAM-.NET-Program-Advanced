@@ -11,4 +11,6 @@
     Task Update(int id, CategoryUpdateDto update);
 
     Task Delete(int id);
+
+    Task<IEnumerable<CategoryEntity>> GetByIds(IEnumerable<int> ids);
 }

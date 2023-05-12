@@ -3,7 +3,7 @@
     private CategoryService _service;
 
     [SetUp]
-    public void SetUp() => _service = new(new CategoryRepository(_connection));
+    public void SetUp() => _service = new(new CategoryRepository(_connection), new FakePermissionVerifier());
 
     [TearDown]
     public ValueTask TearDown() => _connection.DisposeAsync();

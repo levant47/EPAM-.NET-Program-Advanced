@@ -9,4 +9,6 @@
     Task<CategoryEntity> Update(int id, CategoryUpdateDto update);
 
     Task Delete(int id);
+
+    Task<IDictionary<int, CategoryEntity>> GetByIds(IEnumerable<int> ids, CancellationToken cancellationToken);
 }
