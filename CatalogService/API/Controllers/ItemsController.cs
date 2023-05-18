@@ -7,7 +7,6 @@ public class ItemsController : ControllerBase
 
     public ItemsController(IItemService service) => _service = service;
 
-    [Permission(Permission.Read)]
     [HttpGet]
     public async Task<ActionResult<ItemEntity[]>> Get(int? categoryId, int page = 1, int pageSize = 10)
     {
@@ -33,7 +32,6 @@ public class ItemsController : ControllerBase
         ));
     }
 
-    [Permission(Permission.Read)]
     [HttpGet("{id}")]
     public async Task<ActionResult<ItemEntity>> Get(int id)
     {
@@ -41,7 +39,6 @@ public class ItemsController : ControllerBase
         return Ok(Hateoas(item, Links(item)));
     }
 
-    [Permission(Permission.Create)]
     [HttpPost]
     public async Task<ActionResult<ItemEntity>> Create(ItemCreateDto newItem)
     {
@@ -49,7 +46,6 @@ public class ItemsController : ControllerBase
         return Ok(Hateoas(result, Links(result)));
     }
 
-    [Permission(Permission.Update)]
     [HttpPut("{id}")]
     public async Task<ActionResult<ItemEntity>> Update(int id, ItemUpdateDto update)
     {
@@ -57,7 +53,6 @@ public class ItemsController : ControllerBase
         return Ok(Hateoas(result, Links(result)));
     }
 
-    [Permission(Permission.Delete)]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
