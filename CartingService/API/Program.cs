@@ -39,6 +39,8 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddJaegerTracing("Carting Service");
 
+builder.Services.AddGrpc(grpcServiceOptions => grpcServiceOptions.EnableDetailedErrors = true);
+
 builder.Services.AddSingleton<ICartService, CartService>();
 builder.Services.AddSingleton<IItemService, ItemService>();
 builder.Services.AddSingleton<IMessageHandler<ItemUpdatedMessage>, ItemService>();
@@ -85,5 +87,7 @@ app.Use(next => async context =>
 });
 
 app.MapControllers();
+
+app.MapGrpcService<GrpcService>();
 
 app.Run();

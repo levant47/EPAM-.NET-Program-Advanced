@@ -1,0 +1,34 @@
+﻿syntax = "proto3";
+
+service Carting {
+    rpc GetCartItemsUnary (GetCartItemsRequest) returns (GetCartItemsResponse);
+    rpc GetCartItemsServerStreaming (GetCartItemsRequest) returns (stream Item);
+    rpc AddItemClientStreaming (stream AddItemRequest) returns (AddItemResponse);
+    rpc AddItemBiDirectional (stream AddItemRequest) returns (stream Item);
+}
+
+message GetCartItemsRequest {
+    string cartId = 1;
+}
+
+message GetCartItemsResponse {
+    repeated Item items = 1;
+}
+
+message AddItemRequest {
+    string cartId = 1;
+    Item newItem = 2;
+}
+
+message AddItemResponse {
+    repeated Item newItems = 1;
+}
+
+message Item {
+    int32 id = 1;
+    string imageAltText = 2;
+    string name = 3;
+    string imageUrl = 4;
+    float price = 5;
+    int32 amount = 6;
+}
