@@ -1,7 +1,7 @@
 ﻿public class MessagingHostedService : IHostedService
 {
     private readonly MessagingService _messagingService;
-    private readonly  string _server;
+    private readonly string _server;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     private readonly ILogger _logger;
 

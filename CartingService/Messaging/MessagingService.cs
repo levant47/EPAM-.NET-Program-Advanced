@@ -28,49 +28,47 @@ public class MessagingService
             var sharedBllAssembly = typeof(MessageAssemblyMarker).Assembly;
             var messageTypeName = message.Topic;
             var messageType = sharedBllAssembly.GetTypes().FirstOrDefault(type => type.Name == messageTypeName);
-            if (messageType != null)
-            {
-                var handlerType = typeof(IMessageHandler<>).MakeGenericType(messageType);
-                var handler = _serviceProvider.GetService(handlerType);
-                if (handler != null)
-                {
-                    var handlerMethod = handlerType.GetMethod(nameof(IMessageHandler<object>.Handle))!;
-                    var messageHandled = false;
-                    while (!messageHandled)
-                    {
-                        try
-                        {
-                            var messagePayload = JsonSerializer.Deserialize(message.Message.Value, messageType)!;
-                            var baseMessage = (BaseMessage)messagePayload;
-                            using var activity = _activitySource.StartActivity(
-                                "Handling message",
-                                ActivityKind.Consumer,
-                                new ActivityContext(
-                                    ActivityTraceId.CreateFromString(baseMessage.TraceId),
-                                    ActivitySpanId.CreateFromString(baseMessage.SpanId),
-                                    ActivityTraceFlags.Recorded
-                                )
-                            );
-                            await (Task)handlerMethod.Invoke(handler, new[] { messagePayload })!;
-                            consumer.Commit();
-                            activity?.Stop();
-                            messageHandled = true;
-                        }
-                        catch (Exception exception)
-                        {
-                            _logger.LogError(exception.ToString());
-                            await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
-                        }
-                    }
-                }
-                else
-                {
-                    _logger.LogWarning($"Handler for message type {messageTypeName} was not found");
-                }
-            }
-            else
+            if (messageType == null)
             {
                 _logger.LogWarning($"Message type {messageTypeName} was not recognized");
+                continue;
+            }
+
+            var handlerType = typeof(IMessageHandler<>).MakeGenericType(messageType);
+            var handler = _serviceProvider.GetService(handlerType);
+            if (handler == null)
+            {
+                _logger.LogWarning($"Handler for message type {messageTypeName} was not found");
+                continue;
+            }
+
+            var handlerMethod = handlerType.GetMethod(nameof(IMessageHandler<object>.Handle))!;
+            var messageHandled = false;
+            while (!messageHandled)
+            {
+                try
+                {
+                    var messagePayload = JsonSerializer.Deserialize(message.Message.Value, messageType)!;
+                    var baseMessage = (BaseMessage)messagePayload;
+                    using var activity = _activitySource.StartActivity(
+                        "Handling message",
+                        ActivityKind.Consumer,
+                        new ActivityContext(
+                            ActivityTraceId.CreateFromString(baseMessage.TraceId),
+                            ActivitySpanId.CreateFromString(baseMessage.SpanId),
+                            ActivityTraceFlags.Recorded
+                        )
+                    );
+                    await (Task)handlerMethod.Invoke(handler, new[] { messagePayload })!;
+                    consumer.Commit();
+                    activity?.Stop();
+                    messageHandled = true;
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception.ToString());
+                    await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                }
             }
         }
         consumer.Close();

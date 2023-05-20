@@ -1,1 +1,1 @@
-﻿public interface IMessageHandler<T> { Task Handle(T message); }
+﻿public interface IMessageHandler<in T> { Task Handle(T message); }

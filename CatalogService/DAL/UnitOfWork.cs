@@ -1,4 +1,4 @@
-﻿public class UnitOfWork : IUnitOfWork, IDisposable
+﻿public sealed class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly MySqlConnection _connection;
 
