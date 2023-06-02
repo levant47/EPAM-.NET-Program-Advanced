@@ -20,7 +20,6 @@ jobs:
         ports:
           - 3306:3306
         env:
-          MARIADB_USER: root
           MARIADB_ROOT_PASSWORD: root
       carting-db:
         image: mongo
