@@ -12,8 +12,8 @@ jobs:
     - uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 7.0.x
+    - run: mysql -u root -proot -e "SELECT 1"
     - name: Test
-      run: mysql -u root -proot -e "SELECT 1"
       run: dotnet test
     services:
       catalog-db:
