@@ -42,12 +42,7 @@
     }
 
     [Test]
-    public async Task GetByIdHandlesInvalidId()
-    {
-        var retrievedItem = await _service.GetById(-1);
-
-        Assert.Null(retrievedItem);
-    }
+    public void GetByIdHandlesInvalidId() => Assert.ThrowsAsync<NotFoundException>(() => _service.GetById(-1));
 
     [Test]
     public async Task CreateWorks()
