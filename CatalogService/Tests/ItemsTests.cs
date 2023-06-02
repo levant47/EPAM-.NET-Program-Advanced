@@ -7,7 +7,7 @@
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        await using var connection = new MySqlConnection("server=localhost;uid=root;database=test");
+        await using var connection = new MySqlConnection(ConnectionString.Get());
         _setUpCategoryId = (await DataHelper.SetUpCategories(1, connection)).First().Id;
     }
 
