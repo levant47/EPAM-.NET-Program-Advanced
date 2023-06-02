@@ -3,5 +3,5 @@
     protected MySqlConnection _connection;
 
     [SetUp]
-    public void SetUp() => _connection = new("server=127.0.0.1;uid=root;database=test");
+    public void SetUp() => _connection = new("server=catalog-db;uid=root;database=test");
 }
