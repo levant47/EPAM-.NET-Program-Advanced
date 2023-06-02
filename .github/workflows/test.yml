@@ -19,7 +19,7 @@ jobs:
         image: mariadb
         ports:
           - 3306:3306
-        environment:
+        env:
           - MARIADB_ROOT_PASSWORD=root
       carting-db:
         image: mongo
