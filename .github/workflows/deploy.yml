@@ -7,4 +7,5 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: curl http://178.74.224.103:4999/redeploy -H 'token: ${{ secrets.deploytoken }}'
+      - run: |
+        curl http://178.74.224.103:4999/redeploy -H "token: ${{ secrets.deploytoken }}"
