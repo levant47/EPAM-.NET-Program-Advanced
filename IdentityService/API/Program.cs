@@ -52,6 +52,7 @@ builder.Services.AddSingleton(new JwtConfiguration
     RefreshTokenExpiresInSeconds = int.Parse(builder.Configuration["RefreshTokenExpiresInSeconds"]!),
 });
 builder.Services.AddSingleton(jwtKey);
+builder.Services.AddSingleton<Jwt>();
 
 var app = builder.Build();
 
