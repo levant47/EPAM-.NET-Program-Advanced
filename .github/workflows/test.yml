@@ -1,0 +1,26 @@
+name: Run Tests
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+    - run: dotnet test
+    services:
+      catalog-db:
+        image: mariadb
+        ports:
+          - 3306:3306
+        env:
+          MARIADB_ROOT_PASSWORD: root
+      carting-db:
+        image: mongo
+        ports:
+          - 27017:27017
